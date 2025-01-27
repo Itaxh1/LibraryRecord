@@ -1,0 +1,33 @@
+version: '3'
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./data:/data/db
+    command: mongod --bind_ip_all
+
+  rabbitmq:
+    image: rabbitmq:management
+    ports:
+      - "5672:5672"   # For AMQP connections
+      - "15672:15672" # For RabbitMQ management UI
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/usr/src/app
+      - /usr/src/app/node_modules
+    depends_on:
+      - mongo
+      - rabbitmq
+    environment:
+      - MONGO_URI=mongodb://localhost:27017/
+      - RABBITMQ_URL=amqp://rabbitmq:5672
+    command: sh -c "sleep 5 && npm start"
+
